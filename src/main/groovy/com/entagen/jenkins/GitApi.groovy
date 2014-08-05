@@ -6,8 +6,8 @@ class GitApi {
     String gitUrl
     Pattern branchNameFilter = null
 
-    public List<String> getBranchNames() {
-        String command = "git ls-remote --heads ${gitUrl}"
+    public List<String> _getBranchNames(String repos) {
+        String command = "git ls-remote --heads " + repos
         List<String> branchNames = []
 
         eachResultLine(command) { String line ->
@@ -21,6 +21,14 @@ class GitApi {
         }
 
         return branchNames
+    }
+
+    public List<String> getBranchNames() {
+        List<String> cb = _getBranchNames("${gitUrl}/voltdb")
+        List<String> prob=_getBranchNames("${gitUrl}/pro")
+        prob.removeAll(cb)
+        cb.addAll(prob)
+        return cb.sort()
     }
 
     public Boolean passesFilter(String branchName) {
