@@ -141,19 +141,26 @@ class JenkinsApi {
 
         assert mapCopy.path != null, "'path' is a required attribute for the GET method"
 
-        try {
-            response = restClient.get(map)
-        } catch (HttpHostConnectException ex) {
-            println "Unable to connect to host: $jenkinsServerUrl"
-            throw ex
-        } catch (UnknownHostException ex) {
-            println "Unknown host: $jenkinsServerUrl"
-            throw ex
-        } catch (HttpResponseException ex) {
-            def message = "Unexpected failure with path $jenkinsServerUrl${mapCopy.path}, HTTP Status Code: ${ex.response?.status}, full map: $mapCopy"
-            throw new Exception(message, ex)
+        for (i in 1..10) {
+            try {
+                response = restClient.get(map)
+                break
+            } catch (HttpHostConnectException ex) {
+                println "Unable to connect to host: $jenkinsServerUrl"
+                throw ex
+            } catch (UnknownHostException ex) {
+                println "Unknown host: $jenkinsServerUrl"
+                throw ex
+            } catch (HttpResponseException ex) {
+                def message = "Unexpected failure with path $jenkinsServerUrl${mapCopy.path}, HTTP Status Code: ${ex.response?.status}, full map: $mapCopy"
+                if (ex.response.status != 401 || i == 10)
+                    throw new Exception(message, ex)
+                else
+                    println message
+            }
+            println "retrying error..."
+            sleep 1000 * i
         }
-
         assert response.status < 400
         return response
     }
@@ -213,13 +220,26 @@ class JenkinsApi {
         http.handler.failure = { resp ->
             def msg = "Unexpected failure on $jenkinsServerUrl$path: ${resp.statusLine} ${resp.status}"
             status = resp.statusLine.statusCode
-            throw new Exception(msg)
+            if (status != 401)
+                throw new Exception(msg)
         }
 
-        http.post(path: path, body: postBody, query: params,
-                requestContentType: contentType) { resp ->
-            assert resp.statusLine.statusCode < 400
-            status = resp.statusLine.statusCode
+        println "Modified http post section"
+        for (i in 1..10) {
+            http.post(path: path, body: postBody, query: params,
+                    requestContentType: contentType) { resp ->
+                status = resp.statusLine.statusCode
+                assert resp.statusLine.statusCode != 401
+            }
+            if (status < 400)
+                break
+            println "Received error $jenkinsServerUrl$path ${status}, retrying..."
+            sleep 1000 * i
+        }
+        if (status == 401) {
+            def msg = "Unexpected failure on $jenkinsServerUrl$path: status=${status}"
+            if (status != 401)
+                throw new Exception(msg)
         }
         return status
     }
