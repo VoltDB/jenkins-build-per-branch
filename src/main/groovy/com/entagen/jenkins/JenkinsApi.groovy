@@ -143,7 +143,7 @@ class JenkinsApi {
 
         for (i in 1..10) {
             try {
-                response = restClient.get(map)
+                response = restClient.get(map.clone() as Map)
                 break
             } catch (HttpHostConnectException ex) {
                 println "Unable to connect to host: $jenkinsServerUrl"
