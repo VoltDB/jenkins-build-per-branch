@@ -220,7 +220,7 @@ class JenkinsApi {
         http.handler.failure = { resp ->
             def msg = "Unexpected failure on $jenkinsServerUrl$path: ${resp.statusLine} ${resp.status}"
             status = resp.statusLine.statusCode
-            if (status != 401)
+            if (status != 401 || status !=500)
                 throw new Exception(msg)
         }
 
@@ -238,7 +238,7 @@ class JenkinsApi {
         }
         if (status == 401) {
             def msg = "Unexpected failure on $jenkinsServerUrl$path: status=${status}"
-            if (status != 401)
+            if (status != 401 || status != 500)
                 throw new Exception(msg)
         }
         return status
