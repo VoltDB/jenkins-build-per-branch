@@ -122,6 +122,11 @@ class JenkinsApi {
 
     void deleteView(String viewName, String nestedWithinView = null) {
         println "deleting view - viewName:${viewName}, nestedView:${nestedWithinView}"
+        //Also, delete any remaining jobs in the view
+        String path = "view/${viewName}/api/json"
+        def response = get(path: path)
+        List<String> jobNames = response.data?.jobs?.name
+        jobNames.each { deleteJob(it) }
         post(buildViewPath("doDelete", nestedWithinView, viewName))
     }
 
@@ -220,7 +225,7 @@ class JenkinsApi {
         http.handler.failure = { resp ->
             def msg = "Unexpected failure on $jenkinsServerUrl$path: ${resp.statusLine} ${resp.status}"
             status = resp.statusLine.statusCode
-            if (status != 401 || status !=500)
+            if (status != 401 || status != 500)
                 throw new Exception(msg)
         }
 
