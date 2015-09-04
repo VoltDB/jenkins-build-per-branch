@@ -26,8 +26,14 @@ class GitApi {
     public List<String> getBranchNames() {
         List<String> cb = _getBranchNames("${gitUrl}/voltdb")
         List<String> prob=_getBranchNames("${gitUrl}/pro")
+        List<String> ger_cb = _getBranchNames("ssh://ci@gerrit.voltdb.lan:29418/voltdb")
+        List<String> ger_prob = _getBranchNames("ssh://ci@gerrit.voltdb.lan:29418/pro")
         prob.removeAll(cb)
         cb.addAll(prob)
+        ger_prob.removeAll(cb)
+        cb.addAll(ger_prob)
+        ger_cb.removeAll(cb)
+        cb.addAll(ger_cb)
         return cb.sort()
     }
 
