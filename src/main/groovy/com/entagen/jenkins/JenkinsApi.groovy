@@ -99,7 +99,7 @@ class JenkinsApi {
 
     void deleteJob(String jobName) {
         println "deleting job $jobName"
-        //post("job/${jobName}/doDelete")
+        post("job/${jobName}/doDelete")
     }
 
     void createViewForBranch(BranchView branchView, String nestedWithinView = null) {
@@ -127,7 +127,7 @@ class JenkinsApi {
         def response = get(path: path)
         List<String> jobNames = response.data?.jobs?.name
         jobNames.each { deleteJob(it) }
-        //post(buildViewPath("doDelete", nestedWithinView, viewName))
+        post(buildViewPath("doDelete", nestedWithinView, viewName))
     }
 
     protected String buildViewPath(String pathSuffix, String... nestedViews) {
