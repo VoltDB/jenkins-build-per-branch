@@ -128,6 +128,16 @@ class JenkinsApi {
         List<String> jobNames = response.data?.jobs?.name
         jobNames.each { deleteJob(it) }
         post(buildViewPath("doDelete", nestedWithinView, viewName))
+        if (viewName.startsWith('branch-')) {
+            def branch = viewName.replaceAll("branch-","")
+            println "cleaning up " + branch
+            def cmd = "sudo /var/lib/jenkins/cleanup-deleted-branch.sh "+ branch
+            def proc = cmd.execute()
+            def b = new StringBuffer()
+            proc.consumeProcessErrorStream(b)
+            println proc.text
+            println b.toString()
+        }
     }
 
     protected String buildViewPath(String pathSuffix, String... nestedViews) {
