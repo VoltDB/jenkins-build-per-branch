@@ -39,6 +39,7 @@ class GitApi {
 
     public Boolean passesFilter(String branchName) {
         if (!branchName) return false
+        if (branchName.endsWith("master") && branchName.length() > 6) return false
         if (!branchNameFilter) return true
         return branchName ==~ branchNameFilter
     }
