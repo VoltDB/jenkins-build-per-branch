@@ -20,6 +20,10 @@ class JenkinsJobManager {
     JenkinsApi jenkinsApi
     GitApi gitApi
 
+    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x"
+    String ALL_BACKPORTS = "-backportv\\d+\\.\\d+"
+    String BACKPORT = "-backportv"
+
     JenkinsJobManager(Map props) {
         for (property in props) {
             this."${property.key}" = property.value
@@ -33,10 +37,38 @@ class JenkinsJobManager {
         List<String> allJobNames = jenkinsApi.jobNames
 
         // ensure that there is at least one job matching the template pattern, collect the set of template jobs
-        List<TemplateJob> templateJobs = findRequiredTemplateJobs(allJobNames)
+        List<TemplateJob> templateJobs = findRequiredTemplateJobs(templateBranchName, allJobNames)
+        Map<String, List> templates = [ "${templateBranchName}" : templateJobs.clone() ]
+        List<TemplateJob> moreTemplateJobs = findRequiredTemplateJobs("$ALL_RELEASES", allJobNames)
+        moreTemplateJobs.each() { it ->
+            if (it.baseJobName ==~ /^branch-\d+-.*/ && it.templateBranchName.startsWith("release-")) {
+                List<TemplateJob> t = templates.get(it.templateBranchName, [])
+                t.add(it)
+            }
+        }
+        // a list of all the template jobs
+        templateJobs.addAll(moreTemplateJobs)
+
+        /*
+        template   template jobs                        non-template jobs
+
+        master     branch-\d-.*-master$                 branch-\d-.*(branch)
+                                                        including -release-x.y.z
+                                                        all-master$
+                                                        all-backportv\d+\.\d+ (all matches)
+
+        -backportvx.y      branch-\d-.*-release-x.y$    branch-\d-.* contiaining -backportvx.y (inclusive)
+                                                        --or--
+                                                        all-master
+                                                        all-release-\d.\d
+                                                        filter -backportvx.y
+
+        */
 
         // create any missing template jobs and delete any jobs matching the template patterns that no longer have branches
-        syncJobs(allBranchNames, allJobNames, templateJobs)
+        templates.each() { template, jobs ->
+            syncJobs(allBranchNames, allJobNames, template, jobs)
+        }
 
         // create any missing branch views, scoped within a nested view if we were given one
         if (!noViews) {
@@ -44,9 +76,28 @@ class JenkinsJobManager {
         }
     }
 
-    public void syncJobs(List<String> allBranchNames, List<String> allJobNames, List<TemplateJob> templateJobs) {
-        List<String> currentTemplateDrivenJobNames = templateDrivenJobNames(templateJobs, allJobNames)
-        List<String> nonTemplateBranchNames = allBranchNames - templateBranchName
+    public String getBackportVersion(String release) {
+        if (release == "master") {
+            // all branches with -backportv tags
+            return "${BACKPORT}\\d+\\.\\d+"
+        } else {
+            // all branches with a particular -backportv version tag
+            def rx = (release =~ /release-(\d+\.\d+)/)
+            rx.matches()
+            assert rx[0][1]
+            return "${BACKPORT}${rx[0][1]}"
+            }
+        }
+
+    public void syncJobs(List<String> allBranchNames, List<String> allJobNames, String template, List<TemplateJob> templateJobs) {
+        List<String> currentTemplateDrivenJobNames = templateDrivenJobNames(template, templateJobs, allJobNames)
+        List<String> nonTemplateBranchNames = allBranchNames - template
+        if (template == "master") {
+            nonTemplateBranchNames.removeAll { it ==~ /.*${getBackportVersion(template)}.*/ }
+            nonTemplateBranchNames.removeAll { it ==~ /.*$ALL_RELEASES$/ }
+        } else {
+            nonTemplateBranchNames.retainAll { it ==~ /.*${getBackportVersion(template)}.*/ }
+        }
         List<ConcreteJob> expectedJobs = this.expectedJobs(templateJobs, nonTemplateBranchNames)
 
         createMissingJobs(expectedJobs, currentTemplateDrivenJobNames, templateJobs)
@@ -83,17 +134,25 @@ class JenkinsJobManager {
         }.flatten()
     }
 
-    public List<String> templateDrivenJobNames(List<TemplateJob> templateJobs, List<String> allJobNames) {
+    public List<String> templateDrivenJobNames(String template, List<TemplateJob> templateJobs, List<String> allJobNames) {
         List<String> templateJobNames = templateJobs.jobName
         List<String> templateBaseJobNames = templateJobs.baseJobName
 
         // don't want actual template jobs, just the jobs that were created from the templates
-        return (allJobNames - templateJobNames).findAll { String jobName ->
-            templateBaseJobNames.find { String baseJobName -> jobName.startsWith(baseJobName)}
+        if (template == "master") {
+            def result = (allJobNames - templateJobNames).findAll { String jobName ->
+                templateBaseJobNames.find { String baseJobName -> jobName.startsWith(baseJobName) && !jobName.find(/.*${getBackportVersion(template)}.*/) }
+            }
+            result.removeAll { it ==~ /.*${ALL_RELEASES}$/ }
+            return result
+        } else {
+            return (allJobNames - "master").findAll { String jobName ->
+                templateBaseJobNames.find { String baseJobName -> jobName.find(/${getBackportVersion(template)}/) }
+            }
         }
     }
 
-    List<TemplateJob> findRequiredTemplateJobs(List<String> allJobNames) {
+    List<TemplateJob> findRequiredTemplateJobs(String templateBranchName, List<String> allJobNames) {
         String regex = /^($templateJobPrefix-.*)-($templateBranchName)$/
 
         List<TemplateJob> templateJobs = allJobNames.findResults { String jobName ->
@@ -110,7 +169,8 @@ class JenkinsJobManager {
 
     public void syncViews(List<String> allBranchNames) {
         List<String> existingViewNames = jenkinsApi.getViewNames(this.nestedView)
-        List<BranchView> expectedBranchViews = allBranchNames.collect { String branchName -> new BranchView(branchName: branchName, templateJobPrefix: this.templateJobPrefix) }
+        List<BranchView> expectedBranchViews = allBranchNames.collect { String branchName ->
+            new BranchView(branchName: branchName, templateJobPrefix: this.templateJobPrefix) }
 
         List<BranchView> missingBranchViews = expectedBranchViews.findAll { BranchView branchView -> !existingViewNames.contains(branchView.viewName)}
         addMissingViews(missingBranchViews)
