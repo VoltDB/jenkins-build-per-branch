@@ -123,7 +123,7 @@ class JenkinsApi {
     void deleteView(String viewName, String nestedWithinView = null) {
         println "deleting view - viewName:${viewName}, nestedView:${nestedWithinView}"
         //Also, delete any remaining jobs in the view
-        String path = "view/${viewName}/api/json"
+        String path = "view/${nestedWithinView}/view/${viewName}/api/json"
         def response = get(path: path)
         List<String> jobNames = response.data?.jobs?.name
         jobNames.each { deleteJob(it) }
