@@ -1,7 +1,5 @@
 package com.entagen.jenkins
 
-import java.util.regex.Pattern
-
 class JenkinsJobManager {
     String templateJobPrefix
     String templateBranchName
@@ -20,7 +18,7 @@ class JenkinsJobManager {
     JenkinsApi jenkinsApi
     GitApi gitApi
 
-    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!6\\.7\\.x)"
+    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!6\\.8\\.x)"
     String ALL_BACKPORTS = "-backportv\\d+\\.\\d+"
     String BACKPORT = "-backportv"
 
