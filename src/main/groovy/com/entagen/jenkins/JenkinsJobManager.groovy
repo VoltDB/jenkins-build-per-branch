@@ -18,7 +18,7 @@ class JenkinsJobManager {
     JenkinsApi jenkinsApi
     GitApi gitApi
 
-    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!7\\.7\\.x)"
+    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!7\\.8\\.x)"
     String ALL_BACKPORTS = "-backportv\\d+\\.\\d+"
     String BACKPORT = "-backportv"
 
@@ -100,7 +100,7 @@ class JenkinsJobManager {
 
         createMissingJobs(expectedJobs, currentTemplateDrivenJobNames, templateJobs)
         if (!noDelete) {
-            deleteDeprecatedJobs(currentTemplateDrivenJobNames - expectedJobs.jobName)
+            deleteDeprecatedJobs((currentTemplateDrivenJobNames - expectedJobs.jobName).findAll{ !it.contains("notest")})
         }
     }
 
@@ -174,7 +174,7 @@ class JenkinsJobManager {
         addMissingViews(missingBranchViews)
 
         if (!noDelete) {
-            List<String> deprecatedViewNames = getDeprecatedViewNames(existingViewNames, expectedBranchViews)
+            List<String> deprecatedViewNames = getDeprecatedViewNames(existingViewNames, expectedBranchViews).findAll{ !it.contains("notest") }
             deleteDeprecatedViews(deprecatedViewNames)
         }
     }
@@ -227,3 +227,4 @@ class JenkinsJobManager {
         return this.gitApi
     }
 }
+
