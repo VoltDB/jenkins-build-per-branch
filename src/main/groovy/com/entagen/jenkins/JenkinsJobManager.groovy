@@ -18,7 +18,7 @@ class JenkinsJobManager {
     JenkinsApi jenkinsApi
     GitApi gitApi
 
-    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!8\\.3\\.x)"
+    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!8\\.4\\.x)"
     String ALL_BACKPORTS = "-backportv\\d+\\.\\d+"
     String BACKPORT = "-backportv"
 
