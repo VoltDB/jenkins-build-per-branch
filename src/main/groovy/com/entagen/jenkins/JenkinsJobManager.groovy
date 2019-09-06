@@ -9,7 +9,7 @@ class JenkinsJobManager {
     String branchNameRegex
     String jenkinsUser
     String jenkinsPassword
-    
+
     Boolean dryRun = false
     Boolean noViews = false
     Boolean noDelete = false
@@ -18,7 +18,7 @@ class JenkinsJobManager {
     JenkinsApi jenkinsApi
     GitApi gitApi
 
-    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!9\\.0\\.x)"
+    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x"
     String ALL_BACKPORTS = "-backportv\\d+\\.\\d+"
     String BACKPORT = "-backportv"
 
@@ -38,12 +38,7 @@ class JenkinsJobManager {
         List<TemplateJob> templateJobs = findRequiredTemplateJobs(templateBranchName, allJobNames)
         Map<String, List> templates = [ "${templateBranchName}" : templateJobs.clone() ]
         List<TemplateJob> moreTemplateJobs = findRequiredTemplateJobs("$ALL_RELEASES", allJobNames)
-        moreTemplateJobs.each() { it ->
-            if (it.baseJobName ==~ /^branch-\d+-.*/ && it.templateBranchName.startsWith("release-")) {
-                List<TemplateJob> t = templates.get(it.templateBranchName, [])
-                t.add(it)
-            }
-        }
+
         // a list of all the template jobs
         templateJobs.addAll(moreTemplateJobs)
 
