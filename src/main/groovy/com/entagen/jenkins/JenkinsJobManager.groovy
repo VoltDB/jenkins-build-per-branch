@@ -15,7 +15,7 @@ class JenkinsJobManager {
     Boolean noDelete = false
     Boolean startOnCreate = false
 
-    JenkinsApi jenkinsApi
+    JenkinsApi2 jenkinsApi
     GitApi gitApi
 
     String ALL_RELEASES = "release-\\d+\\.\\d+\\.x"
@@ -106,9 +106,11 @@ class JenkinsJobManager {
         for(ConcreteJob missingJob in missingJobs) {
             println "Creating missing job: ${missingJob.jobName} from ${missingJob.templateJob.jobName}"
             jenkinsApi.cloneJobForBranch(missingJob, templateJobs)
+            //jenkinsApi.addJobToView(missingJob)
             if (startOnCreate) {
                 jenkinsApi.startJob(missingJob)
             }
+
         }
 
     }
@@ -177,6 +179,7 @@ class JenkinsJobManager {
     public void addMissingViews(List<BranchView> missingViews) {
         println "Missing views: $missingViews"
         for (BranchView missingView in missingViews) {
+            println "creating view $missingView under $nestedView"
             jenkinsApi.createViewForBranch(missingView, this.nestedView)
         }
     }
@@ -187,24 +190,24 @@ class JenkinsJobManager {
 
     public void deleteDeprecatedViews(List<String> deprecatedViewNames) {
         println "Deprecated views: $deprecatedViewNames"
-
+        println "TODO Currently not deleting deprecated views yet"
         for(String deprecatedViewName in deprecatedViewNames) {
-            jenkinsApi.deleteView(deprecatedViewName, this.nestedView)
+            //jenkinsApi.deleteView(deprecatedViewName, this.nestedView)
         }
 
     }
 
-    JenkinsApi initJenkinsApi() {
+    JenkinsApi2 initJenkinsApi() {
         if (!jenkinsApi) {
             assert jenkinsUrl != null
             if (dryRun) {
                 println "DRY RUN! Not executing any POST commands to Jenkins, only GET commands"
-                this.jenkinsApi = new JenkinsApiReadOnly(jenkinsServerUrl: jenkinsUrl)
+                //this.jenkinsApi = new JenkinsApiReadOnly(jenkinsServerUrl: jenkinsUrl)
             } else {
-                this.jenkinsApi = new JenkinsApi(jenkinsServerUrl: jenkinsUrl)
+                this.jenkinsApi = new JenkinsApi2(jenkinsUrl, jenkinsUser, jenkinsPassword)
             }
 
-            if (jenkinsUser || jenkinsPassword) this.jenkinsApi.addBasicAuth(jenkinsUser, jenkinsPassword)
+            //if (jenkinsUser || jenkinsPassword) this.jenkinsApi.addBasicAuth(jenkinsUser, jenkinsPassword)
         }
 
         return this.jenkinsApi
