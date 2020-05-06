@@ -18,7 +18,8 @@ class JenkinsJobManager {
     JenkinsApi2 jenkinsApi
     GitApi gitApi
 
-    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x"
+    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!9\\.3\\.x)"
+    //String ALL_RELEASES = "release-\\d+\\.\\d+\\.x"
     String ALL_BACKPORTS = "-backportv\\d+\\.\\d+"
     String BACKPORT = "-backportv"
 
@@ -36,8 +37,11 @@ class JenkinsJobManager {
 
         // ensure that there is at least one job matching the template pattern, collect the set of template jobs
         List<TemplateJob> templateJobs = findRequiredTemplateJobs(templateBranchName, allJobNames)
+
         Map<String, List> templates = [ "${templateBranchName}" : templateJobs.clone() ]
+        //println "templates:"+templates;
         List<TemplateJob> moreTemplateJobs = findRequiredTemplateJobs("$ALL_RELEASES", allJobNames)
+        //println "$ALL_RELEASES moreTemplateJobs:"+moreTemplateJobs;
 
         // a list of all the template jobs
         templateJobs.addAll(moreTemplateJobs)
@@ -84,15 +88,18 @@ class JenkinsJobManager {
 
     public void syncJobs(List<String> allBranchNames, List<String> allJobNames, String template, List<TemplateJob> templateJobs) {
         List<String> currentTemplateDrivenJobNames = templateDrivenJobNames(template, templateJobs, allJobNames)
+
         List<String> nonTemplateBranchNames = allBranchNames - template
         if (template == "master") {
+            // ex ignore any branches that match .*-backportv8.4.*
             nonTemplateBranchNames.removeAll { it ==~ /.*${getBackportVersion(template)}.*/ }
+            // example: ignore any branches that match .*release-d+\\.\\d+\\.x"
             nonTemplateBranchNames.removeAll { it ==~ /.*$ALL_RELEASES$/ }
         } else {
             nonTemplateBranchNames.retainAll { it ==~ /.*${getBackportVersion(template)}.*/ }
         }
         List<ConcreteJob> expectedJobs = this.expectedJobs(templateJobs, nonTemplateBranchNames)
-
+        //println "expectedJobs: "+expectedJobs;
         createMissingJobs(expectedJobs, currentTemplateDrivenJobNames, templateJobs)
         if (!noDelete) {
             deleteDeprecatedJobs((currentTemplateDrivenJobNames - expectedJobs.jobName).findAll{ !it.contains("notest")})
@@ -102,7 +109,6 @@ class JenkinsJobManager {
     public void createMissingJobs(List<ConcreteJob> expectedJobs, List<String> currentJobs, List<TemplateJob> templateJobs) {
         List<ConcreteJob> missingJobs = expectedJobs.findAll { !currentJobs.contains(it.jobName) }
         if (!missingJobs) return
-
         for(ConcreteJob missingJob in missingJobs) {
             println "Creating missing job: ${missingJob.jobName} from ${missingJob.templateJob.jobName}"
             jenkinsApi.cloneJobForBranch(missingJob, templateJobs)
@@ -147,6 +153,10 @@ class JenkinsJobManager {
         }
     }
 
+    /*
+    * templateBranchName is usually either 'master' or 'release-${version}.x'
+    * templateJobPrefix is usually 'branch'/
+    */
     List<TemplateJob> findRequiredTemplateJobs(String templateBranchName, List<String> allJobNames) {
         String regex = /^($templateJobPrefix-.*)-($templateBranchName)$/
 
@@ -190,9 +200,9 @@ class JenkinsJobManager {
 
     public void deleteDeprecatedViews(List<String> deprecatedViewNames) {
         println "Deprecated views: $deprecatedViewNames"
-        println "TODO Currently not deleting deprecated views yet"
+        //println "TODO Currently not deleting deprecated views yet"
         for(String deprecatedViewName in deprecatedViewNames) {
-            //jenkinsApi.deleteView(deprecatedViewName, this.nestedView)
+            jenkinsApi.deleteView(deprecatedViewName, this.nestedView)
         }
 
     }

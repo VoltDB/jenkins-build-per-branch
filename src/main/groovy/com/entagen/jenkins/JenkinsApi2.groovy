@@ -106,6 +106,10 @@ class JenkinsApi2 {
 
     }
 
+    public View findView(String viewName) {
+        return jenkins.getView(viewName);
+    }
+
     void createViewForBranch(BranchView branchView, String nestedWithinView = null) {
         String viewName = branchView.viewName
         // refresh the jobs list
@@ -114,7 +118,9 @@ class JenkinsApi2 {
         Map body = [name: viewName, mode: 'hudson.model.ListView', Submit: 'OK', json: '{"name": "' + viewName + '", "mode": "hudson.model.ListView"}']
         println "creating view - viewName:${viewName}, nestedView:${nestedWithinView}"
         //post(buildViewPath("createView", nestedWithinView), body)
-        View view;
+        View view = findView(viewName)
+
+        /*
         if (nestedWithinView != null ) {
             for (v in jenkins.getView(nestedWithinView).getViews() ) {
                 if (viewName.equals(v.getName()) ) {
@@ -127,7 +133,7 @@ class JenkinsApi2 {
         }  else {
             view = jenkins.getView(viewName)
         }
-
+        */
 
         List<String> viewJobs = new ArrayList<String>()
         String pattern = branchView.templateJobPrefix+".*"+branchView.safeBranchName
@@ -194,10 +200,11 @@ class JenkinsApi2 {
         //Also, delete any remaining jobs in the view
         //String path = "view/${nestedWithinView}/view/${viewName}/api/json"
         //def response = get(path: path)
-        view = getView(viewName)
-        jobs = view.getJobs()
+        def view = findView(viewName)
+        def jobs = view.getJobs()
         //List<String> jobNames = response.data?.jobs?.name
 
+        println "found view "+view.getName()+" with num jobs:"+jobs.size()
         jobs.each { deleteJob(it.getName()) }
         //post(buildViewPath("doDelete", nestedWithinView, viewName))
         if (viewName.startsWith('branch-')) {
@@ -210,6 +217,13 @@ class JenkinsApi2 {
             println proc.text
             println b.toString()
         }
+        //this doesn't work
+        //jenkins.deleteView(viewName,true)
+
+        // this will generate an error on stdout, but it deletes the view
+        String script = "Jenkins.instance.getView(\""+viewName+"\").doDoDelete(null,null)"
+        String res = jenkins.runScript(script, true)
+        //println("deleteview res:"+res)
     }
 
     protected String buildViewPath(String pathSuffix, String... nestedViews) {

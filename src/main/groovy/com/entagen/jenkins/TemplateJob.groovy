@@ -10,8 +10,12 @@ class TemplateJob {
         String safeBranchName = branchName.replaceAll('/', '_')
         return "$baseJobName-$safeBranchName"
     }
-    
+
     ConcreteJob concreteJobForBranch(String branchName) {
         ConcreteJob concreteJob = new ConcreteJob(templateJob: this, branchName: branchName, jobName: jobNameForBranch(branchName) )
+    }
+
+    String toString() {
+        return jobName+":"+baseJobName+":"+templateBranchName;
     }
 }
