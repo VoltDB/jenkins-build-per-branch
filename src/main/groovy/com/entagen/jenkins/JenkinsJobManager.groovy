@@ -164,6 +164,10 @@ class JenkinsJobManager {
             TemplateJob templateJob = null
             jobName.find(regex) { full, baseJobName, branchName ->
                 templateJob = new TemplateJob(jobName: full, baseJobName: baseJobName, templateBranchName: branchName)
+                if ( full ==~ /system-test/ || full ==~ /performance-/ || full ==~ /community-/ || full ==~ /endurance-/) {
+                    print "skipping system test template, use admintools-clone-jobs "+full
+                    templateJob = null
+                }
             }
             return templateJob
         }

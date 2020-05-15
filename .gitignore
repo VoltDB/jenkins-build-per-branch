@@ -5,6 +5,6 @@
 *.diff
 build
 .gradle
-
+log
 out
 atlassian-ide-plugin.xml
