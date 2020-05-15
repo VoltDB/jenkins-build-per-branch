@@ -1,0 +1,31 @@
+// This is a groovy system script that can be used inside 'script' call
+// it moves all of the top level 'branch-*' to branch-jobs3
+
+View bview = Jenkins.instance.getView("Branch-jobs3");
+def bviewViews = bview.getViews()
+
+for ( tview in Jenkins.instance.getViews())  {
+  	println "trying view " + tview.getViewName()
+    if ( tview.getViewName() ==~ /^branch-.*/ ) {
+
+
+	def owner = tview.getOwner();
+	if ( owner instanceof Hudson ) {
+  		println("top level view")
+  		def pview = owner.getPrimaryView()
+  		owner.deleteView(tview)
+  		// move to Branch-jobs3
+  		if ( bviewViews.contains(tview) ) {
+    		println("view "+tview.getViewName()+" already exists in, Branch-jobs")
+    		continue
+  		} else {
+            println "adding view " + tview.getViewName() + " to branch-jobs3"
+     		bview.addView(tview)
+  		}
+	} else {
+		println(tview.getOwner())
+	}
+    } else {
+       println("skipping non branch job view")
+    }
+}
