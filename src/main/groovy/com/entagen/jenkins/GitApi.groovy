@@ -24,7 +24,7 @@ class GitApi {
     }
 
     public List<String> getBranchNames() {
-        List<String> cb = _getBranchNames("${gitUrl}/voltdb")
+        List<String> cb = _getBranchNames("${gitUrl}/internal")
         List<String> prob=_getBranchNames("${gitUrl}/pro")
         prob.removeAll(cb)
         cb.addAll(prob)
