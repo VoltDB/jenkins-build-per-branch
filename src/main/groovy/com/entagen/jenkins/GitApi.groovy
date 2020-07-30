@@ -4,6 +4,8 @@ import java.util.regex.Pattern
 
 class GitApi {
     String gitUrl
+    String voltRepo
+    String proRepo
     Pattern branchNameFilter = null
 
     public List<String> _getBranchNames(String repos) {
@@ -24,8 +26,8 @@ class GitApi {
     }
 
     public List<String> getBranchNames() {
-        List<String> cb = _getBranchNames("${gitUrl}/internal")
-        List<String> prob=_getBranchNames("${gitUrl}/pro")
+        List<String> cb = _getBranchNames("${gitUrl}/${voltRepo}")
+        List<String> prob=_getBranchNames("${gitUrl}/${proRepo}")
         prob.removeAll(cb)
         cb.addAll(prob)
         return cb.sort()
@@ -53,7 +55,6 @@ class GitApi {
           gitOutput = gitOutput.concat(new String(bytes))
         }
         process.waitFor()
-
         if (process.exitValue() == 0) {
             gitOutput.eachLine { String line ->
                closure(line)

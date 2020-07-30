@@ -4,6 +4,8 @@ class JenkinsJobManager {
     String templateJobPrefix
     String templateBranchName
     String gitUrl
+    String proRepo
+    String voltRepo
     String nestedView
     String jenkinsUrl
     String branchNameRegex
@@ -164,10 +166,14 @@ class JenkinsJobManager {
             TemplateJob templateJob = null
             jobName.find(regex) { full, baseJobName, branchName ->
                 templateJob = new TemplateJob(jobName: full, baseJobName: baseJobName, templateBranchName: branchName)
+                ! ( full ==~ /system-test/ || full ==~ /performance-/ || full ==~ /community-/ || full ==~ /endurance-/)
+
+                /*
                 if ( full ==~ /system-test/ || full ==~ /performance-/ || full ==~ /community-/ || full ==~ /endurance-/) {
                     print "skipping system test template, use admintools-clone-jobs "+full
                     templateJob = null
                 }
+                */
             }
             return templateJob
         }
@@ -230,7 +236,9 @@ class JenkinsJobManager {
     GitApi initGitApi() {
         if (!gitApi) {
             assert gitUrl != null
-            this.gitApi = new GitApi(gitUrl: gitUrl)
+            assert proRepo != null
+            assert voltRepo != null
+            this.gitApi = new GitApi(gitUrl: gitUrl,proRepo: proRepo, voltRepo: voltRepo)
             if (this.branchNameRegex){
                 this.gitApi.branchNameFilter = ~this.branchNameRegex
             }
