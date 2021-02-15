@@ -20,7 +20,7 @@ class JenkinsJobManager {
     JenkinsApi2 jenkinsApi
     GitApi gitApi
 
-    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!9\\.3\\.x)"
+    String ALL_RELEASES = "release-\\d+\\.\\d+\\.x(?<!10\\.2\\.x)"
     //String ALL_RELEASES = "release-\\d+\\.\\d+\\.x"
     String ALL_BACKPORTS = "-backportv\\d+\\.\\d+"
     String BACKPORT = "-backportv"
