@@ -97,6 +97,8 @@ class JenkinsJobManager {
             nonTemplateBranchNames.removeAll { it ==~ /.*${getBackportVersion(template)}.*/ }
             // example: ignore any branches that match .*release-d+\\.\\d+\\.x"
             nonTemplateBranchNames.removeAll { it ==~ /.*$ALL_RELEASES$/ }
+            // example: ignore any branches that match *refs_tags_.*
+            nonTemplateBranchNames.removeAll { it ==~ /.*refs_tags_.*/ }
         } else {
             nonTemplateBranchNames.retainAll { it ==~ /.*${getBackportVersion(template)}.*/ }
         }
