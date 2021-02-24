@@ -24,6 +24,7 @@ class JenkinsJobManager {
     //String ALL_RELEASES = "release-\\d+\\.\\d+\\.x"
     String ALL_BACKPORTS = "-backportv\\d+\\.\\d+"
     String BACKPORT = "-backportv"
+    String REFS_TAGS = "refs/tags/"
 
     JenkinsJobManager(Map props) {
         for (property in props) {
@@ -97,6 +98,8 @@ class JenkinsJobManager {
             nonTemplateBranchNames.removeAll { it ==~ /.*${getBackportVersion(template)}.*/ }
             // example: ignore any branches that match .*release-d+\\.\\d+\\.x"
             nonTemplateBranchNames.removeAll { it ==~ /.*$ALL_RELEASES$/ }
+            // example: ignore any branches that match *refs_tags_.*
+            nonTemplateBranchNames.removeAll { it ==~ /.*$REFS_TAGS.*/ }
         } else {
             nonTemplateBranchNames.retainAll { it ==~ /.*${getBackportVersion(template)}.*/ }
         }
