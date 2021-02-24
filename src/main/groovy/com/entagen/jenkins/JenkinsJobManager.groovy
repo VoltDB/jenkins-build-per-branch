@@ -94,12 +94,14 @@ class JenkinsJobManager {
         List<String> nonTemplateBranchNames = allBranchNames - template
         println "nonTemplateBranchNames: " + nonTemplateBranchNames
         if (template == "master") {
+            println "I AM HERE"
             // ex ignore any branches that match .*-backportv8.4.*
             nonTemplateBranchNames.removeAll { it ==~ /.*${getBackportVersion(template)}.*/ }
             // example: ignore any branches that match .*release-d+\\.\\d+\\.x"
             nonTemplateBranchNames.removeAll { it ==~ /.*$ALL_RELEASES$/ }
             // example: ignore any branches that match *refs_tags_.*
             nonTemplateBranchNames.removeAll { it ==~ /.*refs_tags_.*/ }
+        println "nonTemplateBranchNames2: " + nonTemplateBranchNames
         } else {
             nonTemplateBranchNames.retainAll { it ==~ /.*${getBackportVersion(template)}.*/ }
         }
