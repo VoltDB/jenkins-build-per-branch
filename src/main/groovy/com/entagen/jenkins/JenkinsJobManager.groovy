@@ -92,6 +92,7 @@ class JenkinsJobManager {
         List<String> currentTemplateDrivenJobNames = templateDrivenJobNames(template, templateJobs, allJobNames)
 
         List<String> nonTemplateBranchNames = allBranchNames - template
+        println "template: " + template
         if (template == "master") {
             // ex ignore any branches that match .*-backportv8.4.*
             nonTemplateBranchNames.removeAll { it ==~ /.*${getBackportVersion(template)}.*/ }
