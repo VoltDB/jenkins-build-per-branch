@@ -92,7 +92,7 @@ class JenkinsJobManager {
         List<String> currentTemplateDrivenJobNames = templateDrivenJobNames(template, templateJobs, allJobNames)
 
         List<String> nonTemplateBranchNames = allBranchNames - template
-        println "allBranchNames: " + allBranchNames
+        println "nonTemplateBranchNames: " + nonTemplateBranchNames
         if (template == "master") {
             // ex ignore any branches that match .*-backportv8.4.*
             nonTemplateBranchNames.removeAll { it ==~ /.*${getBackportVersion(template)}.*/ }
@@ -103,8 +103,9 @@ class JenkinsJobManager {
         } else {
             nonTemplateBranchNames.retainAll { it ==~ /.*${getBackportVersion(template)}.*/ }
         }
+        println "templateJobs: " + templateJobs
         List<ConcreteJob> expectedJobs = this.expectedJobs(templateJobs, nonTemplateBranchNames)
-        println "expectedJobs: "+expectedJobs;
+        //println "expectedJobs: "+expectedJobs;
         createMissingJobs(expectedJobs, currentTemplateDrivenJobNames, templateJobs)
         if (!noDelete) {
             deleteDeprecatedJobs((currentTemplateDrivenJobNames - expectedJobs.jobName).findAll{ !it.contains("notest")})
