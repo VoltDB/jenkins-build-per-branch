@@ -132,7 +132,7 @@ class JenkinsApi {
         if (viewName.startsWith('branch-')) {
             def branch = viewName.replaceAll("branch-","")
             println "cleaning up " + branch
-            def cmd = "sudo /var/lib/jenkins/cleanup-deleted-branch.sh "+ branch
+            def cmd = "sudo /usr/local/bin/cleanup-deleted-branch.sh "+ branch
             def proc = cmd.execute()
             def b = new StringBuffer()
             proc.consumeProcessErrorStream(b)
