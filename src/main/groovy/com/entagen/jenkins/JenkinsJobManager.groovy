@@ -38,6 +38,8 @@ class JenkinsJobManager {
         List<String> allBranchNames = gitApi.branchNames
         List<String> allJobNames = jenkinsApi.jobNames
 
+        print "I AM HERE jobNames:" + jobNames
+
         // ensure that there is at least one job matching the template pattern, collect the set of template jobs
         List<TemplateJob> templateJobs = findRequiredTemplateJobs(templateBranchName, allJobNames)
 
