@@ -105,7 +105,7 @@ class JenkinsJobManager {
         }
         List<ConcreteJob> expectedJobs = this.expectedJobs(templateJobs, nonTemplateBranchNames)
         //println "expectedJobs: "+expectedJobs;
-        createMissingJobs(expectedJobs, currentTemplateDrivenJobNames, templateJobs)
+//        createMissingJobs(expectedJobs, currentTemplateDrivenJobNames, templateJobs)
         if (!noDelete) {
             deleteDeprecatedJobs((currentTemplateDrivenJobNames - expectedJobs.jobName).findAll{ !it.contains("notest")})
         }
