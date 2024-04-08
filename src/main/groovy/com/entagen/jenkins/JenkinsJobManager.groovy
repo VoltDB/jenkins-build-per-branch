@@ -71,9 +71,9 @@ class JenkinsJobManager {
         }
 
         // create any missing branch views, scoped within a nested view if we were given one
-//        if (!noViews) {
-//            syncViews(allBranchNames)
-//        }
+        if (!noViews) {
+            syncViews(allBranchNames)
+        }
     }
 
     public String getBackportVersion(String release) {
